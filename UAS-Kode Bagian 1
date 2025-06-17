@@ -1,0 +1,83 @@
+from collections import deque
+import matplotlib.pyplot as plt
+import networkx as nx
+
+# Representasi graf peta Rumania
+romania_map = {
+    'Arad': ['Zerind', 'Timisoara', 'Sibiu'],
+    'Zerind': ['Arad', 'Oradea'],
+    'Oradea': ['Zerind', 'Sibiu'],
+    'Sibiu': ['Arad', 'Oradea', 'Fagaras', 'Rimnicu Vilcea'],
+    'Timisoara': ['Arad', 'Lugoj'],
+    'Lugoj': ['Timisoara', 'Mehadia'],
+    'Mehadia': ['Lugoj', 'Drobeta'],
+    'Drobeta': ['Mehadia', 'Craiova'],
+    'Craiova': ['Drobeta', 'Rimnicu Vilcea', 'Pitesti'],
+    'Rimnicu Vilcea': ['Sibiu', 'Craiova', 'Pitesti'],
+    'Fagaras': ['Sibiu', 'Bucharest'],
+    'Pitesti': ['Rimnicu Vilcea', 'Craiova', 'Bucharest'],
+    'Bucharest': ['Fagaras', 'Pitesti', 'Giurgiu', 'Urziceni'],
+    'Giurgiu': ['Bucharest'],
+    'Urziceni': ['Bucharest', 'Hirsova', 'Vaslui'],
+    'Hirsova': ['Urziceni', 'Eforie'],
+    'Eforie': ['Hirsova'],
+    'Vaslui': ['Urziceni', 'Iasi'],
+    'Iasi': ['Vaslui', 'Neamt'],
+    'Neamt': ['Iasi']
+}
+
+def bfs(start, goal):
+    visited = set()
+    queue = deque([[start]])
+
+    while queue:
+        path = queue.popleft()
+        node = path[-1]
+
+        if node not in visited:
+            if node == goal:
+                return path
+
+            visited.add(node)
+
+            for neighbor in romania_map.get(node, []):
+                new_path = list(path)
+                new_path.append(neighbor)
+                queue.append(new_path)
+    return None
+
+# Cari jalur
+start_city = 'Arad'
+goal_city = 'Bucharest'
+path = bfs(start_city, goal_city)
+
+# Buat graf visual
+G = nx.Graph()
+
+# Tambahkan semua edge
+for city, neighbors in romania_map.items():
+    for neighbor in neighbors:
+        G.add_edge(city, neighbor)
+
+# Buat posisi node agar tidak acak (layout circular)
+pos = nx.spring_layout(G, seed=42)
+
+# Warna node dan edge default
+node_colors = ['skyblue' if node not in path else 'orange' for node in G.nodes()]
+edge_colors = []
+
+for u, v in G.edges():
+    if any((u == path[i] and v == path[i+1]) or (v == path[i] and u == path[i+1]) for i in range(len(path)-1)):
+        edge_colors.append('orange')
+    else:
+        edge_colors.append('lightgray')
+
+# Gambar graf
+plt.figure(figsize=(12, 8))
+nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=800, alpha=0.9)
+nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=2)
+nx.draw_networkx_labels(G, pos, font_size=10, font_weight='bold')
+
+plt.title(f"Jalur BFS dari {start_city} ke {goal_city}:\n" + " -> ".join(path), fontsize=14)
+plt.axis('off')
+plt.show()
