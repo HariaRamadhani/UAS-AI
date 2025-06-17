@@ -1,0 +1,67 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# 1. Load Dataset
+url = "https://raw.githubusercontent.com/plotly/datasets/master/diabetes.csv"
+data = pd.read_csv(url)
+
+# 2. Tampilkan beberapa baris pertama
+print("Data Awal:")
+print(data.head())
+
+# 3. Cek missing value
+print("\nJumlah missing value per kolom:")
+print(data.isnull().sum())
+
+# 4. Pisahkan fitur dan target
+X = data.drop("Outcome", axis=1)
+y = data["Outcome"]
+
+# 5. Split data: 80% training, 20% testing
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 6. Inisialisasi model Decision Tree
+clf = DecisionTreeClassifier(criterion="entropy", max_depth=4, random_state=42)
+
+# 7. Training model
+clf.fit(X_train, y_train)
+
+# 8. Prediksi
+y_pred = clf.predict(X_test)
+
+# 9. Evaluasi Model
+print("\nAkurasi:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# 10. Visualisasi Confusion Matrix
+plt.figure(figsize=(6, 5))
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt="d", cmap="YlGnBu", xticklabels=["Negatif", "Positif"], yticklabels=["Negatif", "Positif"])
+plt.title("Confusion Matrix")
+plt.xlabel("Prediksi")
+plt.ylabel("Aktual")
+plt.show()
+
+# 11. Visualisasi Pohon Keputusan (Decision Tree)
+plt.figure(figsize=(80, 60))  # Increase figure size for better visibility
+
+plt.subplots_adjust(bottom=0.6, top=0.9, left=0.1, right=0.9)
+
+plot_tree(
+    clf,
+    feature_names=X.columns,
+    class_names=["Negatif", "Positif"],
+    filled=True,
+    rounded=True,
+    fontsize=5,  
+    proportion=True,  
+    node_ids=False  
+)
+
+plt.title("Visualisasi Decision Tree (ID3)", fontsize=28)
+plt.tight_layout()  
+plt.show()
